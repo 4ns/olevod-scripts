@@ -1,11 +1,15 @@
 #!/bin/bash
+source ./funcs.sh
 
- urls=$1
- output=$2
+if [ -z "$1" ]; then
+    echo -e "\033[0;31mNo playlist supplied.\033[0m" >&2
+    echo "Usage: $0 playlist [output dir]" >&2
+    exit 1
+fi
 
- ffmpeg_to() {
-     ffmpeg -hide_banner -loglevel info -i "$1" -c copy $2 < /dev/null;
- }
+urls=$1
+output=${2:-output}
+output=${output%/}
 
 #  while IFS='|' read -r nid m3u8 next
 #  do
@@ -19,6 +23,6 @@ while IFS= read -r line; do
     IFS="|" read -a videoarr <<< $line
     # echo "${videoarr[@]}"
     echo "${videoarr[0]} ${videoarr[1]}"
-    ffmpeg_to "${videoarr[1]}" "$output/${videoarr[0]}.mp4"
+    download_to "${videoarr[1]}" "$output/${videoarr[0]}.mp4"
 done < "$urls"
 

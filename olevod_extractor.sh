@@ -1,9 +1,35 @@
 #!/bin/bash
 #
-# param1: starter url
+# Param 1: start URL
+# Param 2: playlist filename or output folder for downloading
+# Param 3: download videos immediately
+source ./funcs.sh
+
+if [ -z "$1" ]; then
+	echo -e "\033[0;31mNo start URL supplied.\033[0m" >&2
+    echo "Usage: $0 URL playlist_or_folder [immediately_download]"
+	exit 1
+fi
 
 next=$1
 target=$2
+download=$3
+if [ -z "$3" ]; then
+	# save to playlist
+	target=${2:-playlist}
+
+	if [ -e "$target" ] && [ ! -f "$target" ]; then
+		echo -e "\033[0;31mError: $target exists and is not a file.\033[0m" >&2
+		exit 1
+	fi
+else
+	target=${2:-output}
+	if [ -e "$target" ] && [ ! -d "$target" ]; then
+		echo -e "\033[0;31mError: $target exists and is not a folder.\033[0m" >&2
+		exit 1
+	fi
+fi
+
 root_url='https://www.olevod.com'
 last_url=$root_url
 
@@ -21,16 +47,25 @@ extract_from() {
 
     
     if [[ ! -z $m3u8 ]]; then
-        echo "$nid|$m3u8|$next" | tee -a $target
+		if [ -z "$download" ]; then
+			# save to playlist
+        	echo "$nid|$m3u8|$next" | tee -a $target
+
+    		#interval=$((RANDOM % 20 + 30))
+    		interval=$((RANDOM % 10 + 5))
+    		echo "sleep $interval";
+    		sleep $interval
+		else
+			# download video
+			echo "download_to $m3u8 $target/$nid.mp4"
+			download_to "$m3u8" "$target/$nid.mp4"
+		fi
     else
         echo "error"
         exit 1
     fi
 }
 
-ffmpeg_to() {
-    ffmpeg -hide_banner -i "$1" -c copy $2
-}
 
 while [[ ! -z $next ]]; do
     last_url=$url
@@ -41,9 +76,5 @@ while [[ ! -z $next ]]; do
     fi
 
     extract_from
-
-    #interval=$((RANDOM % 20 + 30))
-    interval=$((RANDOM % 10 + 5))
-    echo "sleep $interval";
-    sleep $interval
 done
+

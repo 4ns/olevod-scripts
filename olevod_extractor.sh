@@ -24,6 +24,7 @@ if [ -z "$3" ]; then
 	fi
 else
 	target=${2:-output}
+	target=${target%/}
 	if [ -e "$target" ] && [ ! -d "$target" ]; then
 		echo -e "\033[0;31mError: $target exists and is not a folder.\033[0m" >&2
 		exit 1
@@ -51,10 +52,6 @@ extract_from() {
 			# save to playlist
         	echo "$nid|$m3u8|$next" | tee -a $target
 
-    		#interval=$((RANDOM % 20 + 30))
-    		interval=$((RANDOM % 10 + 5))
-    		echo "sleep $interval";
-    		sleep $interval
 		else
 			# download video
 			echo "download_to $m3u8 $target/$nid.mp4"
@@ -76,5 +73,10 @@ while [[ ! -z $next ]]; do
     fi
 
     extract_from
+
+    #interval=$((RANDOM % 20 + 30))
+    interval=$((RANDOM % 10 + 10))
+    echo "sleep $interval";
+    sleep $interval
 done
 
